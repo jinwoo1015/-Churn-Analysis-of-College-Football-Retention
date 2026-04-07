@@ -17,7 +17,7 @@ def load_model():
 model = load_model()
 
 # Create some mock data for the MVP (Replace this with pd.read_csv('your_roster.csv') later!)
-df = pd.read_csv('midterm_data_474.csv')
+df = pd.read_csv('chunn_model_data_repo.csv')
 
 # --- 3. MAKE PREDICTIONS ---
 # Get the probability of transferring (Class 1)

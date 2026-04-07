@@ -66,7 +66,7 @@ from sklearn.metrics import roc_curve, auc
 roster_df = pd.read_csv('roster_data.csv')
 portal_df = pd.read_csv('portal_data.csv')
 catapult_df = pd.read_csv('real_master_dataset.csv')
-df = pd.read_csv('midterm_data_474.csv')
+df = pd.read_csv('chunn_model_data_repo.csv')
 ```
 
 \newpage
