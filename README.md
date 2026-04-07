@@ -7,12 +7,12 @@
 ## 📌 Project Overview
 In modern college football, roster retention is just as critical as recruiting. This project translates raw GPS/Catapult physical data and geographic metrics into an actionable "flight risk" dashboard, helping coaching staffs proactively identify players who are statistically highly likely to enter the transfer portal. 
 
-Rather than stopping at a Jupyter Notebook, this project features a fully deployed interactive web application built with Streamlit. It provides an end-to-end machine learning solution, complete with individual risk breakdowns and an interactive spatial map to visualize transfer trends across player hometowns—bridging the gap between complex model outputs and actionable stakeholder insights.
+Rather than stopping at a Jupyter Notebook, this project features a fully deployed interactive web application built with Streamlit. It provides an end-to-end machine learning solution, complete with individual risk breakdowns and an interactive spatial map to visualize transfer trends across player hometowns, bridging the gap between complex model outputs and actionable stakeholder insights.
 
 ## 🚀 Key Features
 * **XGBoost Predictive Engine:** A machine learning model trained to identify non-linear relationships between physical exertion, geographical distance from home, and the likelihood of transferring.
 * **Geographic Risk Mapping:** Includes a dynamic, interactive Plotly map visualizing player hometowns to help coaches identify spatial or regional trends in transfer behavior.
-* **Interactive Roster Dashboard:** A clean, automated UI that sorts the current roster from highest risk to lowest risk.
+* **Interactive Roster Dashboard:** A clean, automated UI that sorts the current roster from highest risk to lowest risk, and also the sorting options to subset the roster for easier visualization.
 * **Actionable "Why" Metrics:** The dashboard isolates the specific driver of a player's risk score (e.g., highlighting if their `Avg_Player_Load_Per_Min` is dangerously high), allowing strength and conditioning staff to intervene immediately.
 * **Handled Class Imbalance:** Utilized SMOTE (Synthetic Minority Over-sampling Technique) to ensure the model accurately detects the minority class (players who transfer) without bias.
 
