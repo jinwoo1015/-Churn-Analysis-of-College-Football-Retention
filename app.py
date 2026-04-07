@@ -55,7 +55,7 @@ fig = px.scatter_mapbox(
     color="transfer", 
     color_discrete_map={0: "blue", 1: "red"}, 
     hover_name="Name_x", 
-    hover_data={"Risk Score (%)": True, "lat_jitter": False, "lon_jitter": False}, # Hides the messy coordinates from the tooltip
+    hover_data={"Risk Score (%)": ':.2f', "lat_jitter": False, "lon_jitter": False}, # Hides the messy coordinates from the tooltip
     zoom=3, 
     mapbox_style="carto-darkmatter" 
 )
