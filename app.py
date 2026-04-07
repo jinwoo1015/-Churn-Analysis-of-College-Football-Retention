@@ -93,14 +93,21 @@ if sort_option == "Risk: High to Low":
 elif sort_option == "Risk: Low to High":
     display_df = display_df.sort_values(by="Risk Score (%)", ascending=True)
 elif sort_option == "Name: A to Z":
-    display_df = display_df.sort_values(by="Player", ascending=True)
+    display_df = display_df.sort_values(by="Name_x", ascending=True)
 
-# 4. Loop through the NEWLY filtered/sorted dataframe (display_df instead of df)
-for index, row in display_df.iterrows():
-    with st.expander(f"**{row['Name_x']}** ({row['position']}) - Risk: {row['Risk Score (%)']:.1f}%"):
-        
-        # Display the metrics inside the expander (matching your rounded formatting!)
-        c1, c2, c3 = st.columns(3)
-        c1.metric("Avg Load / Min", f"{row['Avg_Player_Load_Per_Min']:.2f}")
-        c2.metric("Max Velocity", f"{row['Season_Max_Velocity']:.2f}")
-        c3.metric("Home Latitude", f"{row['homeLatitude']:.2f}")
+
+table_df = display_df[['Name_x', 'position', 'Risk Score (%)', 'Avg_Player_Load_Per_Min', 'Season_Max_Velocity', 'homeLatitude']].copy()
+
+# Round the numerical columns so they look clean in the table
+table_df['Avg_Player_Load_Per_Min'] = table_df['Avg_Player_Load_Per_Min'].round(2)
+table_df['Season_Max_Velocity'] = table_df['Season_Max_Velocity'].round(2)
+table_df['homeLatitude'] = table_df['homeLatitude'].round(2)
+
+# 5. Display the Interactive Heatmap Table
+st.dataframe(
+    # Apply a red color gradient specifically to the Risk Score column
+    table_df.style.background_gradient(cmap='Reds', subset=['Risk Score (%)']),
+    use_container_width=True,
+    hide_index=True, # Hides the ugly row numbers (0, 1, 2...)
+    height=400 # Keeps the table a manageable size so they can scroll inside it
+)
