@@ -1,6 +1,8 @@
 import streamlit as st
 import pandas as pd
 import pickle
+import plotly.express as px
+import numpy as np
 
 # --- 1. SETUP & CONFIG ---
 st.set_page_config(page_title="Flight Risk Dashboard", page_icon="🏈", layout="wide")
@@ -38,6 +40,27 @@ col2.metric("High Risk Players (>70%)", len(df[df['Risk Score (%)'] > 70]))
 col3.metric("Avg Squad Risk", f"{df['Risk Score (%)'].mean():.1f}%")
 
 st.divider()
+
+st.markdown("### Player Hometowns")
+
+# Add a tiny bit of random noise (approx 1-2 miles) so dots don't stack
+df['lat_jitter'] = df['homeLatitude'] + np.random.uniform(-0.02, 0.02, size=len(df))
+df['lon_jitter'] = df['homeLongitude'] + np.random.uniform(-0.02, 0.02, size=len(df))
+
+# Create the interactive map using the new jittered columns
+fig = px.scatter_mapbox(
+    df, 
+    lat="lat_jitter", 
+    lon="lon_jitter", 
+    color="transfer", 
+    color_discrete_map={0: "blue", 1: "red"}, 
+    hover_name="Name_x", 
+    hover_data={"Risk Score (%)": True, "lat_jitter": False, "lon_jitter": False}, # Hides the messy coordinates from the tooltip
+    zoom=3, 
+    mapbox_style="carto-darkmatter" 
+)
+
+st.plotly_chart(fig, use_container_width=True)
 
 # Display the interactive roster list
 for index, row in df.iterrows():
