@@ -54,6 +54,6 @@ for index, row in df.iterrows():
             
         st.markdown("#### Driver Metrics:")
         c1, c2, c3 = st.columns(3)
-        c1.metric("Avg Load / Min", row['Avg_Player_Load_Per_Min'])
-        c2.metric("Max Velocity", row['Season_Max_Velocity'])
-        c3.metric("Home Latitude", row['homeLatitude'])
+        c1.metric("Avg Load / Min", f"{row['Avg_Player_Load_Per_Min']:.2f}")
+        c2.metric("Max Velocity", f"{row['Season_Max_Velocity']:.2f}")
+        c3.metric("Home Latitude", f"{row['homeLatitude']:.2f}")
