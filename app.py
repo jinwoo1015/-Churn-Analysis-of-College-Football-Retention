@@ -63,19 +63,43 @@ fig = px.scatter_mapbox(
 st.plotly_chart(fig, use_container_width=True)
 
 # Display the interactive roster list
-for index, row in df.iterrows():
-    # Use expanders so coaches can click a player to see "Why"
-    with st.expander(f"**{row['Name_x']}** - Risk: {row['Risk Score (%)']:.1f}%"):
+st.markdown("### 📋 Roster Risk Breakdown")
+
+# 1. Create two columns for our sorting and filtering dropdowns so they sit side-by-side
+filter_col, sort_col = st.columns(2)
+
+with filter_col:
+    # Grab all unique positions from the dataset and add an "All" option
+    # (Make sure your column is actually named 'Position' in your CSV!)
+    all_positions = ['All'] + list(df['position'].unique())
+    selected_position = st.selectbox("Filter by Position:", all_positions)
+
+with sort_col:
+    # Create sorting options
+    sort_option = st.selectbox(
+        "Sort Roster By:", 
+        ["Risk: High to Low", "Risk: Low to High", "Name: A to Z"]
+    )
+
+# 2. Apply the Position Filter
+if selected_position != 'All':
+    display_df = df[df['position'] == selected_position]
+else:
+    display_df = df.copy()
+
+# 3. Apply the Sorting Logic
+if sort_option == "Risk: High to Low":
+    display_df = display_df.sort_values(by="Risk Score (%)", ascending=False)
+elif sort_option == "Risk: Low to High":
+    display_df = display_df.sort_values(by="Risk Score (%)", ascending=True)
+elif sort_option == "Name: A to Z":
+    display_df = display_df.sort_values(by="Player", ascending=True)
+
+# 4. Loop through the NEWLY filtered/sorted dataframe (display_df instead of df)
+for index, row in display_df.iterrows():
+    with st.expander(f"**{row['Name_x']}** ({row['position']}) - Risk: {row['Risk Score (%)']:.1f}%"):
         
-        # Color code the warning based on risk level
-        if row['Risk Score (%)'] > 70:
-            st.error("🚨 HIGH FLIGHT RISK - Immediate Intervention Recommended")
-        elif row['Risk Score (%)'] > 30:
-            st.warning("⚠️ MEDIUM FLIGHT RISK - Monitor closely")
-        else:
-            st.success("✅ LOW FLIGHT RISK")
-            
-        st.markdown("#### Driver Metrics:")
+        # Display the metrics inside the expander (matching your rounded formatting!)
         c1, c2, c3 = st.columns(3)
         c1.metric("Avg Load / Min", f"{row['Avg_Player_Load_Per_Min']:.2f}")
         c2.metric("Max Velocity", f"{row['Season_Max_Velocity']:.2f}")
