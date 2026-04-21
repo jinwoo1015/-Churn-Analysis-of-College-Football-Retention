@@ -52,15 +52,16 @@ If you would like to run this application on your local machine, follow these st
 Open your browser and navigate to http://localhost:8501
 
 ## 📁 Project Structure
-\n├── app.py                 # The main Streamlit application script
-\n├── transfer_model.pkl     # The serialized, pre-trained XGBoost pipeline
-\n├── chunn_model_data_repo.csv  # The cleaned dataset used for dashboard population
-\n├── catapult.csv  # Original dataset for the analysis and modeling
-\n├── roster_data.csv  # Original dataset for the analysis and modeling
-\n├── portal_data.csv  # Original dataset for the analysis and modeling
-\n├── catapult.csv  # Original dataset for the analysis and modeling
-\n├── model_training.qmd   # Jupyter notebook containing EDA, SMOTE, and model training
-\n└── README.md              # Project documentation
+```text
+├── app.py                    # The main Streamlit application script 
+├── transfer_model.pkl        # The serialized, pre-trained XGBoost pipeline 
+├── chunn_model_data_repo.csv # The cleaned dataset used for dashboard population 
+├── catapult.csv              # Original dataset for the analysis and modeling 
+├── roster_data.csv           # Original dataset for the analysis and modeling 
+├── portal_data.csv           # Original dataset for the analysis and modeling 
+├── model_training.qmd        # Jupyter notebook containing EDA, SMOTE, and model training 
+└── README.md                 # Project documentation
+```
 
 ## 📬 Contact
 ### Jinwoo Choi
