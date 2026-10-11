@@ -37,29 +37,33 @@ If you would like to run this application on your local machine, follow these st
 
 1. **Clone the repository:**
    ```bash
-   git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-   cd your-repo-name
+   git clone https://github.com/jinwoo1015/-Churn-Analysis-of-College-Football-Retention.git
+   cd -Churn-Analysis-of-College-Football-Retention
    ```
-2.  **Install the required dependencies:**
+2. **Install the dependencies** (use Python 3.12; `transfer_model.pkl` needs the exact pinned scikit-learn, xgboost and imbalanced-learn versions):
    ```bash
    pip install -r requirements.txt
    ```
-3. **Run the Streamlit app:**
+3. **Run the app** and open http://localhost:8501:
    ```bash
    streamlit run app.py
    ```
-4. **View the app:**
-Open your browser and navigate to http://localhost:8501
 
 ## 📁 Project Structure
 ```text
-├── app.py                    # The main Streamlit application script 
-├── transfer_model.pkl        # The serialized, pre-trained XGBoost pipeline 
-├── chunn_model_data_repo.csv # The cleaned dataset used for dashboard population 
-├── catapult.csv              # Original dataset for the analysis and modeling 
-├── roster_data.csv           # Original dataset for the analysis and modeling 
-├── portal_data.csv           # Original dataset for the analysis and modeling 
-├── model_training.qmd        # Jupyter notebook containing EDA, SMOTE, and model training 
+├── app.py                    # Streamlit entrypoint: layout and filters
+├── dashboard/
+│   ├── data.py               # Loads the model and roster, scores risk
+│   ├── charts.py             # Plotly figures (map, distribution, by position)
+│   └── ui.py                 # HTML fragments and CSS injection
+├── assets/style.css          # Theme: type, colour, layout
+├── .streamlit/config.toml    # Dark base theme
+├── transfer_model.pkl        # The serialized, pre-trained XGBoost pipeline
+├── chunn_model_data_repo.csv # The cleaned dataset used for dashboard population
+├── catapult.csv              # Original dataset for the analysis and modeling
+├── roster_data.csv           # Original dataset for the analysis and modeling
+├── portal_data.csv           # Original dataset for the analysis and modeling
+├── churn_model_UA_Football.qmd # EDA, SMOTE and model training (Quarto)
 └── README.md                 # Project documentation
 ```
 

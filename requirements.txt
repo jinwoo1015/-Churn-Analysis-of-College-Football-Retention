@@ -1,8 +1,9 @@
-streamlit
-pandas
-scikit-learn
-xgboost
-imbalanced-learn
-matplotlib
-plotly
-numpy
+# The pickled model was trained with these exact versions; newer releases fail to unpickle.
+scikit-learn==1.6.1
+xgboost==2.1.4
+imbalanced-learn==0.13.0
+
+streamlit>=1.50
+pandas>=2.2
+numpy>=1.26
+plotly>=5.24

@@ -1,113 +1,59 @@
 import streamlit as st
-import pandas as pd
-import pickle
-import plotly.express as px
-import numpy as np
 
-# --- 1. SETUP & CONFIG ---
-st.set_page_config(page_title="Flight Risk Dashboard", page_icon="🏈", layout="wide")
-st.title("🏈 Transfer Portal Risk Dashboard")
-st.markdown("Identify players at high risk of entering the transfer portal based on physical Catapult metrics.")
+from dashboard import charts, ui
+from dashboard.data import load_roster
 
-# --- 2. LOAD MODEL & DATA ---
-# Cache the model so it doesn't reload every time the user clicks a button
-@st.cache_resource
-def load_model():
-    with open('transfer_model.pkl', 'rb') as file:
-        return pickle.load(file)
+st.set_page_config(page_title="Flight Risk · Roster Retention", page_icon="🏈", layout="wide")
+ui.inject_css()
 
-model = load_model()
+roster = load_roster()
 
-# Create some mock data for the MVP (Replace this with pd.read_csv('your_roster.csv') later!)
-df = pd.read_csv('chunn_model_data_repo.csv')
+with st.sidebar:
+    st.markdown("### Controls")
+    threshold = st.slider("Alert threshold (%)", 30, 95, 70, step=5)
+    positions = st.multiselect("Positions", sorted(roster["position"].unique()), placeholder="All positions")
+    query = st.text_input("Find player", placeholder="Player12")
 
-# --- 3. MAKE PREDICTIONS ---
-# Get the probability of transferring (Class 1)
-features = df[['Avg_Player_Load_Per_Min', 'Season_Max_Velocity', 'homeLatitude']]
-df['Risk Score (%)'] = model.predict_proba(features)[:, 1] * 100
-df['Risk Score (%)'] = df['Risk Score (%)'].round(1)
+view = roster
+if positions:
+    view = view[view["position"].isin(positions)]
+if query:
+    view = view[view["name"].str.contains(query, case=False, regex=False)]
 
-# Sort from highest risk to lowest
-df = df.sort_values(by='Risk Score (%)', ascending=False).reset_index(drop=True)
+ui.masthead(len(roster))
+if view.empty:
+    st.info("No players match these filters.")
+    st.stop()
 
-# --- 4. BUILD THE DASHBOARD UI ---
-st.subheader("Current Roster Status")
+ui.kpis(view, threshold)
 
-# Create a clean layout with columns
-col1, col2, col3 = st.columns(3)
-col1.metric("Total Players Analyzed", len(df))
-col2.metric("High Risk Players (>70%)", len(df[df['Risk Score (%)'] > 70]))
-col3.metric("Avg Squad Risk", f"{df['Risk Score (%)'].mean():.1f}%")
+ui.section("01", "Where they come from")
+map_col, list_col = st.columns([7, 4], gap="medium")
+with map_col:
+    color_by = st.segmented_control("Colour by", ["Risk score", "Actual outcome"], default="Risk score", label_visibility="collapsed")
+    st.plotly_chart(charts.hometown_map(view, color_by or "Risk score"), width="stretch", config={"displayModeBar": False})
+with list_col:
+    ui.watchlist(view)
 
-st.divider()
+ui.section("02", "How the model sees the roster")
+dist_col, pos_col = st.columns(2, gap="medium")
+with dist_col:
+    st.caption("RISK SCORE DISTRIBUTION · BY ACTUAL OUTCOME")
+    st.plotly_chart(charts.risk_distribution(view, threshold), width="stretch", config={"displayModeBar": False})
+with pos_col:
+    st.caption("AVERAGE RISK · BY POSITION")
+    st.plotly_chart(charts.risk_by_position(view), width="stretch", config={"displayModeBar": False})
 
-st.markdown("### Player Hometowns")
-
-# Add a tiny bit of random noise (approx 1-2 miles) so dots don't stack
-df['lat_jitter'] = df['homeLatitude'] + np.random.uniform(-0.02, 0.02, size=len(df))
-df['lon_jitter'] = df['homeLongitude'] + np.random.uniform(-0.02, 0.02, size=len(df))
-
-# Create the interactive map using the new jittered columns
-fig = px.scatter_mapbox(
-    df, 
-    lat="lat_jitter", 
-    lon="lon_jitter", 
-    color="transfer", 
-    color_discrete_map={0: "blue", 1: "red"}, 
-    hover_name="Name_x", 
-    hover_data={"Risk Score (%)": ':.2f', "lat_jitter": False, "lon_jitter": False}, # Hides the messy coordinates from the tooltip
-    zoom=3, 
-    mapbox_style="carto-darkmatter" 
-)
-
-st.plotly_chart(fig, use_container_width=True)
-
-# Display the interactive roster list
-st.markdown("### 📋 Roster Risk Breakdown")
-
-# 1. Create two columns for our sorting and filtering dropdowns so they sit side-by-side
-filter_col, sort_col = st.columns(2)
-
-with filter_col:
-    # Grab all unique positions from the dataset and add an "All" option
-    # (Make sure your column is actually named 'Position' in your CSV!)
-    all_positions = ['All'] + list(df['position'].unique())
-    selected_position = st.selectbox("Filter by Position:", all_positions)
-
-with sort_col:
-    # Create sorting options
-    sort_option = st.selectbox(
-        "Sort Roster By:", 
-        ["Risk: High to Low", "Risk: Low to High", "Name: A to Z"]
-    )
-
-# 2. Apply the Position Filter
-if selected_position != 'All':
-    display_df = df[df['position'] == selected_position]
-else:
-    display_df = df.copy()
-
-# 3. Apply the Sorting Logic
-if sort_option == "Risk: High to Low":
-    display_df = display_df.sort_values(by="Risk Score (%)", ascending=False)
-elif sort_option == "Risk: Low to High":
-    display_df = display_df.sort_values(by="Risk Score (%)", ascending=True)
-elif sort_option == "Name: A to Z":
-    display_df = display_df.sort_values(by="Name_x", ascending=True)
-
-
-table_df = display_df[['Name_x', 'position', 'Risk Score (%)', 'Avg_Player_Load_Per_Min', 'Season_Max_Velocity', 'homeLatitude']].copy()
-
-# Round the numerical columns so they look clean in the table
-table_df['Avg_Player_Load_Per_Min'] = table_df['Avg_Player_Load_Per_Min'].round(2)
-table_df['Season_Max_Velocity'] = table_df['Season_Max_Velocity'].round(2)
-table_df['homeLatitude'] = table_df['homeLatitude'].round(2)
-
-# 5. Display the Interactive Heatmap Table
+ui.section("03", "Full roster")
 st.dataframe(
-    # Apply a red color gradient specifically to the Risk Score column
-    table_df.style.background_gradient(cmap='Reds', subset=['Risk Score (%)']),
-    use_container_width=True,
-    hide_index=True, # Hides the ugly row numbers (0, 1, 2...)
-    height=400 # Keeps the table a manageable size so they can scroll inside it
+    view[["name", "position", "risk", "outcome", "Avg_Player_Load_Per_Min", "Season_Max_Velocity", "hometown"]],
+    hide_index=True, width="stretch", height=420,
+    column_config={
+        "name": "Player", "position": "Pos",
+        "risk": st.column_config.ProgressColumn("Risk", min_value=0, max_value=100, format="%.1f%%"),
+        "outcome": "Actual",
+        "Avg_Player_Load_Per_Min": st.column_config.NumberColumn("Load / min", format="%.2f"),
+        "Season_Max_Velocity": st.column_config.NumberColumn("Max velocity", format="%.1f"),
+        "hometown": "Hometown",
+    },
 )
