@@ -42,7 +42,7 @@ If you would like to run this application on your local machine, follow these st
    git clone https://github.com/jinwoo1015/-Churn-Analysis-of-College-Football-Retention.git
    cd -Churn-Analysis-of-College-Football-Retention
    ```
-2. **Install the dependencies** (use Python 3.12; `transfer_model.pkl` needs the exact pinned scikit-learn, xgboost and imbalanced-learn versions):
+2. **Install the dependencies:**
    ```bash
    pip install -r requirements.txt
    ```
@@ -60,7 +60,9 @@ If you would like to run this application on your local machine, follow these st
 │   └── ui.py                 # HTML fragments and CSS injection
 ├── assets/style.css          # Theme: type, colour, layout
 ├── .streamlit/config.toml    # Dark base theme
-├── transfer_model.pkl        # The serialized, pre-trained XGBoost pipeline
+├── model/                    # Version-independent export of the model (xgb.json, scaler.json)
+├── scripts/export_model.py   # Regenerates model/ from the original pickle
+├── transfer_model.pkl        # The original serialized XGBoost pipeline (training environment only)
 ├── chunn_model_data_repo.csv # The cleaned dataset used for dashboard population
 ├── catapult.csv              # Original dataset for the analysis and modeling
 ├── roster_data.csv           # Original dataset for the analysis and modeling
