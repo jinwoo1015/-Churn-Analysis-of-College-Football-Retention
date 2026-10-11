@@ -2,7 +2,9 @@
 
 [![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
 
-**Live Demo:** [Click here to view the live dashboard](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
+**Live Demo:** [**Open the Flight Risk dashboard →**](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
+
+[![Flight Risk dashboard preview](assets/dashboard.jpg)](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
 
 ## 📌 Project Overview
 In modern college football, roster retention is just as critical as recruiting. This project translates raw GPS/Catapult physical data and geographic metrics into an actionable "flight risk" dashboard, helping coaching staffs proactively identify players who are statistically highly likely to enter the transfer portal. 
