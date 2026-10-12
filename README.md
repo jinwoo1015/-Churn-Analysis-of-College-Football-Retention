@@ -1,10 +1,10 @@
 # 🏈 Predictive Roster Management: Transfer Portal Risk Dashboard
 
-[![Streamlit App](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
+[![Live dashboard](https://img.shields.io/badge/live-dashboard-ff6a3d)](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/)
 
-**Live Demo:** [**Open the Flight Risk dashboard →**](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
+**Live Demo:** [**Open the Flight Risk dashboard →**](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/)
 
-[![Flight Risk dashboard preview](assets/dashboard.jpg)](https://jinwoo1015--churn-analysis-of-college-football-reten-app-i3o8uv.streamlit.app/)
+[![Flight Risk dashboard preview](assets/dashboard.jpg)](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/)
 
 ## 📌 Project Overview
 In modern college football, roster retention is just as critical as recruiting. This project translates raw GPS/Catapult physical data and geographic metrics into an actionable "flight risk" dashboard, helping coaching staffs proactively identify players who are statistically highly likely to enter the transfer portal. 
@@ -46,14 +46,16 @@ If you would like to run this application on your local machine, follow these st
    ```bash
    pip install -r requirements.txt
    ```
-3. **Run the app** and open http://localhost:8501:
+3. **Run the Streamlit version** and open http://localhost:8501 (the live site is the static page in `docs/`):
    ```bash
    streamlit run app.py
    ```
 
 ## 📁 Project Structure
 ```text
-├── app.py                    # Streamlit entrypoint: layout and filters
+├── docs/                     # Static dashboard served by GitHub Pages (index.html, style.css, data.js)
+├── scripts/build_site.py     # Scores the roster and writes docs/data.js
+├── app.py                    # Streamlit version of the dashboard (local use)
 ├── dashboard/
 │   ├── data.py               # Loads the model and roster, scores risk
 │   ├── charts.py             # Plotly figures (map, distribution, by position)

@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flight Risk · Roster Retention</title>
+<meta name="description" content="Which players are most likely to enter the transfer portal, estimated from Catapult load, top speed and distance from home.">
+<link rel="stylesheet" href="style.css">
+<script src="https://cdn.plot.ly/plotly-3.0.1.min.js" charset="utf-8"></script>
+<script src="data.js"></script>
+</head>
+<body>
+<main>
+  <header class="mast">
+    <div class="eyebrow">Roster retention intelligence</div>
+    <div class="mast-row">
+      <h1>Flight<br>Risk</h1>
+      <p class="lede">Which players are most likely to enter the transfer portal, estimated from Catapult load, top speed and distance from home.</p>
+      <ul class="chips"><li>XGBoost</li><li>3 features</li><li id="n-players"></li></ul>
+    </div>
+    <div class="yardline"></div>
+  </header>
+
+  <section class="controls" aria-label="Filters">
+    <label class="ctl"><span class="lbl">Alert threshold <output id="thr-out">70%</output></span>
+      <input id="thr" type="range" min="30" max="95" step="5" value="70"></label>
+    <div class="ctl"><span class="lbl">Positions</span><div class="pills" id="pos"></div></div>
+    <label class="ctl"><span class="lbl">Find player</span><input id="q" type="search" placeholder="Player12"></label>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="sec"><span>01</span><h2>Where they come from</h2><hr></div>
+  <div class="grid g72">
+    <div>
+      <div class="seg" style="margin-bottom:8px"><button class="pill on" data-color="risk">Risk score</button><button class="pill" data-color="outcome">Actual outcome</button></div>
+      <div class="box"><div id="map" style="height:520px"></div></div>
+    </div>
+    <div class="panel" id="watch"></div>
+  </div>
+
+  <div class="sec"><span>02</span><h2>How the model sees the roster</h2><hr></div>
+  <div class="grid g2">
+    <div><div class="cap">Risk score distribution · by actual outcome</div><div class="box"><div id="hist" style="height:300px"></div></div></div>
+    <div><div class="cap">Average risk · by position</div><div class="box"><div id="bypos" style="height:300px"></div></div></div>
+  </div>
+
+  <div class="sec"><span>03</span><h2>Full roster</h2><hr></div>
+  <div class="tablewrap"><table id="tbl"></table></div>
+
+  <footer>Scores are the model's transfer probability for each player. <a href="https://github.com/jinwoo1015/-Churn-Analysis-of-College-Football-Retention">Source and method on GitHub</a>.</footer>
+</main>
+<script>
+const R = window.ROSTER, $ = id => document.getElementById(id);
+const CHALK = '#ece8dc', DIM = '#8a948d', GRID = '#1e2924', EMBER = '#ff6a3d', TEAL = '#3ddc97';
+const SCALE = [[0, '#2f7d62'], [.5, '#d9c46a'], [1, '#ff4d2e']];
+const FONT = {family: 'Hanken Grotesk, sans-serif', color: CHALK, size: 13};
+const esc = s => String(s).replace(/[&<>"']/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'}[c]));
+const state = {thr: 70, pos: new Set(), q: '', color: 'risk', sort: 'risk', dir: -1};
+const base = h => ({height: h, font: FONT, paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)', margin: {l: 0, r: 0, t: 8, b: 0},
+  legend: {orientation: 'h', y: 1.1, x: 0, font: {color: DIM}}, hoverlabel: {bgcolor: '#0b100e', bordercolor: GRID, font: FONT}});
+const CFG = {displayModeBar: false, responsive: true};
+const mean = a => a.reduce((s, r) => s + r.risk, 0) / a.length;
+
+$('n-players').textContent = R.length + ' players';
+[...new Set(R.map(r => r.pos))].sort().forEach(p => {
+  const b = Object.assign(document.createElement('button'), {className: 'pill', textContent: p});
+  b.onclick = () => { state.pos.has(p) ? state.pos.delete(p) : state.pos.add(p); b.classList.toggle('on'); render(); };
+  $('pos').append(b);
+});
+$('thr').oninput = e => { state.thr = +e.target.value; $('thr-out').textContent = state.thr + '%'; render(); };
+$('q').oninput = e => { state.q = e.target.value.trim().toLowerCase(); render(); };
+document.querySelectorAll('[data-color]').forEach(b => b.onclick = () => {
+  state.color = b.dataset.color;
+  document.querySelectorAll('[data-color]').forEach(x => x.classList.toggle('on', x === b)); render();
+});
+
+function render() {
+  const v = R.filter(r => (!state.pos.size || state.pos.has(r.pos)) && (!state.q || r.name.toLowerCase().includes(state.q)))
+             .sort((a, b) => b.risk - a.risk);
+  if (!v.length) {
+    ['kpis', 'watch'].forEach(i => $(i).innerHTML = '');
+    $('tbl').innerHTML = '<tr><td class="empty">No players match these filters.</td></tr>';
+    ['map', 'hist', 'bypos'].forEach(i => Plotly.purge(i)); return;
+  }
+  kpis(v); watch(v); map(v); hist(v); bypos(v); table(v);
+}
+
+function kpis(v) {
+  const hot = v.filter(r => r.risk >= state.thr).length, top = v[0];
+  const t = [['Players in view', v.length, '', 0], ['At or above ' + state.thr + '%', hot, Math.round(hot / v.length * 100) + '% of roster', 1],
+             ['Average risk', mean(v).toFixed(1) + '<small>%</small>', 'mean transfer probability', 0],
+             ['Highest risk', top.risk.toFixed(1) + '<small>%</small>', esc(top.name) + ' · ' + top.pos, 0]];
+  $('kpis').innerHTML = t.map(([l, val, s, h]) => `<div class="kpi${h ? ' hot' : ''}"><span class="kpi-l">${l}</span><span class="kpi-v">${val}</span><span class="kpi-s">${s}</span></div>`).join('');
+}
+
+function watch(v) {
+  $('watch').innerHTML = `<div class="panel-t">Watchlist · top ${Math.min(8, v.length)}</div><ol class="wl">` + v.slice(0, 8).map((r, i) =>
+    `<li><span class="rk">${String(i + 1).padStart(2, '0')}</span><span class="who"><b>${esc(r.name)}</b><i>${r.pos} · ${esc(r.town)}</i></span><span class="bar"><span style="width:${r.risk}%"></span></span><span class="sc">${Math.round(r.risk)}</span></li>`).join('') + '</ol>';
+}
+
+function map(v) {
+  const hover = r => `<b>${esc(r.name)}</b><br>${r.pos} · ${esc(r.town)}<br>Risk ${r.risk.toFixed(1)}%`;
+  const mk = (rows, color, extra) => ({type: 'scattermap', mode: 'markers', lat: rows.map(r => r.lat), lon: rows.map(r => r.lon),
+    text: rows.map(hover), hoverinfo: 'text', marker: Object.assign({size: rows.map(r => 6 + r.risk * .12), opacity: .85, color}, extra)});
+  const data = state.color === 'risk'
+    ? [mk(v, v.map(r => r.risk), {colorscale: SCALE, cmin: 0, cmax: 100, colorbar: {thickness: 8, len: .5, x: .01, y: .3, tickfont: {color: DIM, size: 11}}})]
+    : [['Transferred', EMBER], ['Stayed', TEAL]].map(([o, c]) => Object.assign(mk(v.filter(r => r.outcome === o), c, {}), {name: o}));
+  Plotly.react('map', data, Object.assign(base(520), {map: {style: 'carto-darkmatter', center: window.MAP_CENTER, zoom: 3}, showlegend: state.color !== 'risk'}), CFG);
+}
+
+function hist(v) {
+  const tr = [['Stayed', TEAL], ['Transferred', EMBER]].map(([o, c]) => ({type: 'histogram', name: o, x: v.filter(r => r.outcome === o).map(r => r.risk),
+    marker: {color: c}, xbins: {start: 0, end: 100, size: 5}, opacity: .9}));
+  Plotly.react('hist', tr, Object.assign(base(300), {barmode: 'stack', bargap: .12,
+    xaxis: {range: [0, 102], ticksuffix: '%', gridcolor: GRID, zeroline: false}, yaxis: {gridcolor: GRID, zeroline: false},
+    shapes: [{type: 'line', x0: state.thr, x1: state.thr, y0: 0, y1: 1, yref: 'paper', line: {color: CHALK, width: 1, dash: 'dot'}}],
+    annotations: [{x: state.thr, y: 1, yref: 'paper', text: 'alert ≥ ' + state.thr, showarrow: false, xanchor: 'left', font: {color: DIM, size: 11}}]}), CFG);
+}
+
+function bypos(v) {
+  const g = {}; v.forEach(r => (g[r.pos] = g[r.pos] || []).push(r));
+  const rows = Object.entries(g).map(([p, a]) => [p, Math.round(mean(a) * 10) / 10]).sort((a, b) => a[1] - b[1]);
+  Plotly.react('bypos', [{type: 'bar', orientation: 'h', y: rows.map(r => r[0]), x: rows.map(r => r[1]), text: rows.map(r => r[1].toFixed(1)),
+    textposition: 'outside', textfont: {color: DIM, size: 12}, cliponaxis: false, marker: {color: rows.map(r => r[1]), colorscale: SCALE, cmin: 0, cmax: 100},
+    hovertemplate: '%{y}: %{x:.1f}%<extra></extra>'}],
+    Object.assign(base(300), {bargap: .35, showlegend: false, xaxis: {range: [0, 100], ticksuffix: '%', gridcolor: GRID, zeroline: false}}), CFG);
+}
+
+const COLS = [['name', 'Player'], ['pos', 'Pos'], ['risk', 'Risk'], ['outcome', 'Actual'], ['load', 'Load / min'], ['vel', 'Max velocity'], ['town', 'Hometown']];
+function table(v) {
+  const s = state.sort, d = state.dir;
+  const rows = [...v].sort((a, b) => (a[s] > b[s] ? 1 : a[s] < b[s] ? -1 : 0) * d);
+  $('tbl').innerHTML = '<thead><tr>' + COLS.map(([k, l]) => `<th data-k="${k}">${l}${k === s ? (d > 0 ? ' ▲' : ' ▼') : ''}</th>`).join('') + '</tr></thead><tbody>' +
+    rows.map(r => `<tr><td>${esc(r.name)}</td><td>${r.pos}</td><td><span class="bar"><span style="width:${r.risk}%"></span></span>${r.risk.toFixed(1)}%</td><td>${r.outcome}</td><td class="n">${r.load.toFixed(2)}</td><td class="n">${r.vel.toFixed(1)}</td><td>${esc(r.town)}</td></tr>`).join('') + '</tbody>';
+  $('tbl').querySelectorAll('th').forEach(th => th.onclick = () => {
+    state.dir = state.sort === th.dataset.k ? -state.dir : (['name', 'pos', 'outcome', 'town'].includes(th.dataset.k) ? 1 : -1);
+    state.sort = th.dataset.k; render();
+  });
+}
+render();
+</script>
+</body>
+</html>
