@@ -4,7 +4,9 @@
 
 **Live Demo:** [**Open the Flight Risk dashboard →**](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/)
 
-[![Flight Risk dashboard preview](assets/dashboard.jpg)](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/)
+[![Flight Risk dashboard walkthrough](media/flight-risk.gif)](media/flight-risk.mp4)
+
+*Click the preview for the full video with sound, or [open the live dashboard](https://jinwoo1015.github.io/-Churn-Analysis-of-College-Football-Retention/).*
 
 ## 📌 Project Overview
 In modern college football, roster retention is just as critical as recruiting. This project translates raw GPS/Catapult physical data and geographic metrics into an actionable "flight risk" dashboard, helping coaching staffs proactively identify players who are statistically highly likely to enter the transfer portal. 
